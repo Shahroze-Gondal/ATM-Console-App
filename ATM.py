@@ -1,15 +1,6 @@
 import json
-from colorama import Fore
-from colorama import Style
+from colorama import Fore, Style
 
-# data = [{'Id': 1, "name": "Shahroze", 'Account_No': 12345, "Pin": 1156, "Amount": 10000},
-#         {'Id': 2, "name": "Usama", 'Account_No': 23456, "Pin": 0000, "Amount": 11000},
-#         {'Id': 3, "name": "Nadeem", 'Account_No': 10001, "Pin": 1000, "Amount": 12000},
-#         {'Id': 4, "name": "Jawad", 'Account_No': 10101, "Pin": 1001, "Amount": 13000}
-#         ]
-#
-# with open("Account.json", "w") as outfile:
-#     json.dump(data, outfile)
 print(f"{Fore.MAGENTA}-----Welcome to ATM!----- {Style.RESET_ALL}")
 
 
@@ -24,6 +15,7 @@ class ATM:
         self.balance = 0
         self.my_balance = 0
         self.decision = 0
+        self.delete_account = 0
 
     def verify(self):
         with open('Account.json') as file:
@@ -69,7 +61,7 @@ class ATM:
             self.deposit()
         else:
             print('Enter valid option :')
-            choose_option(self)
+            self.choose_option(self)
 
     def balance_inquiry(self):
         print(f"Your ramaining balance is {self.person_data['amount']}")
@@ -86,43 +78,6 @@ class ATM:
                 data[idx]["amount"] -= withdraw_amount
                 self.person_data['amount'] = data[idx]["amount"]
         print(f"Your new balance is {self.person_data['amount']}")
-        with open("Account.json", "w") as jsonFile:
-            json.dump(data, jsonFile)
-        return self.take_decision()
-
-    def deposit(self):
-        dep_amount = int(input('Please enter the amount you want to deposit: '))
-        while dep_amount < 500 or dep_amount > 1000000:
-            dep_amount = int(input('Please enter deposit amount between 500 and 10000: '))
-
-        with open("Account.json", "r") as jsonFile:
-            data = json.load(jsonFile)
-        for idx, x in enumerate(data):
-            if self.person_data == data[idx]:
-                data[idx]["amount"] += dep_amount
-                self.person_data['amount'] = data[idx]["amount"]
-        print(f"Your new balance is {self.person_data['amount']}")
-        with open("Account.json", "w") as jsonFile:
-            json.dump(data, jsonFile)
-        return self.take_decision()
-
-    def change_pin(self):
-        old_pin = int(input('Enter your old pin'))
-        while old_pin != self.person_data['pin']:
-            print('Please enter correct pin')
-            old_pin = int(input('Enter your old pin'))
-        # if old_pin == self.person_data['pin']:
-        new_pin = int(input('Enter new pin : '))
-        while new_pin <= 1000 or new_pin >= 10000:
-            print('Your pin must be 4 digit number')
-            new_pin = int(input('Enter new pin : '))
-        with open("Account.json", "r") as jsonFile:
-            data = json.load(jsonFile)
-        for idx, x in enumerate(data):
-            if self.person_data == data[idx]:
-                data[idx]["pin"] = new_pin
-                self.person_data['pin'] = new_pin
-        print(f"Your new pin is {self.person_data['pin']}")
         with open("Account.json", "w") as jsonFile:
             json.dump(data, jsonFile)
         return self.take_decision()
@@ -155,13 +110,55 @@ class ATM:
         account_validate_transfer()
         return self.take_decision()
 
+    def change_pin(self):
+        old_pin = int(input('Enter your old pin'))
+        while old_pin != self.person_data['pin']:
+            print('Please enter correct pin')
+            old_pin = int(input('Enter your old pin'))
+        # if old_pin == self.person_data['pin']:
+        new_pin = int(input('Enter new pin : '))
+        while len(str(new_pin)) != 4:
+            print('Your pin must be 4 digit number')
+            new_pin = int(input('Enter new pin : '))
+        with open("Account.json", "r") as jsonFile:
+            data = json.load(jsonFile)
+        for idx, x in enumerate(data):
+            if self.person_data == data[idx]:
+                data[idx]["pin"] = new_pin
+                self.person_data['pin'] = new_pin
+        print(f"Your new pin is {self.person_data['pin']}")
+        with open("Account.json", "w") as jsonFile:
+            json.dump(data, jsonFile)
+        return self.take_decision()
+
+    def deposit(self):
+        dep_amount = int(input('Please enter the amount you want to deposit: '))
+        while dep_amount < 500 or dep_amount > 1000000:
+            dep_amount = int(input('Please enter deposit amount between 500 and 10000: '))
+
+        with open("Account.json", "r") as jsonFile:
+            data = json.load(jsonFile)
+        for idx, x in enumerate(data):
+            if self.person_data == data[idx]:
+                data[idx]["amount"] += dep_amount
+                self.person_data['amount'] = data[idx]["amount"]
+        print(f"Your new balance is {self.person_data['amount']}")
+        with open("Account.json", "w") as jsonFile:
+            json.dump(data, jsonFile)
+        return self.take_decision()
+
     def take_decision(self):
-        self.decision = int(input('Press 0 to continue: '))
+        self.decision = int(input('Press 0 to continue and 1 to terminate '))
         if self.decision == 0:
             if self.person_data['is_admin']:
                 return self.choose_option_admin()
             else:
                 return self.choose_option()
+        elif self.decision == 1:
+            return ''
+        else:
+            print('You entered wrong option! ')
+            return self.take_decision()
 
     def choose_option_admin(self):
         admin_options = ['create account', 'delete account', 'activate and deactivate']
@@ -171,26 +168,40 @@ class ATM:
         if adm_selected_option == 0:
             self.create_account()
         elif adm_selected_option == 1:
-            self.delete_p_account()
+            self.delete_account = int(input(f'{Fore.YELLOW}Enter valid account number: {Style.RESET_ALL}'))
+            self.delete_p_account(self.delete_account)
         elif adm_selected_option == 2:
-            self.activate_deactivate()
+            ac_no_act_deact = int(input(f"{Fore.YELLOW}Please enter account number{Style.RESET_ALL}"))
+            self.activate_deactivate(ac_no_act_deact)
+        else:
+            print('You entered wrong option')
+            return self.choose_option_admin()
 
     def create_account(self):
         duplicate = True
+        new_person_id = int(input(f"{Fore.YELLOW}Enter new person id:{Style.RESET_ALL}"))
         while duplicate:
             duplicate = False
-            print('Please Enter unique values for id and account number')
-            new_person_id = int(input(f"{Fore.YELLOW}Enter new person id:{Style.RESET_ALL}"))
-            new_person_ac_no = int(input(f"{Fore.YELLOW}Enter new person account number:{Style.RESET_ALL}"))
             for i in range(len(self.data)):
-                if new_person_ac_no == self.data[i]['id'] or new_person_ac_no == self.data[i]['account_no']:
+                if new_person_id == self.data[i]['id']:
                     duplicate = True
             if duplicate:
-                print('You entered duplicate value values! Please Enter unique values for id and account number')
+                print('You entered id which already exists')
+                new_person_id = int(input(f"{Fore.MAGENTA}Enter unique id:{Style.RESET_ALL}"))
+        duplicate = True
+        new_person_ac_no = int(input(f"{Fore.YELLOW}Enter new person account number:{Style.RESET_ALL}"))
+        while duplicate:
+            duplicate = False
+            for i in range(len(self.data)):
+                if new_person_ac_no == self.data[i]['account_no']:
+                    duplicate = True
+            if duplicate:
+                print('You entered account number which already exists')
+                new_person_ac_no = int(input(f"{Fore.MAGENTA}Enter unique account number:{Style.RESET_ALL}"))
         is_admin = False
         new_person_name = input(f"{Fore.YELLOW}Enter new person name:{Style.RESET_ALL}")
         new_person_pin = int(input(f"{Fore.YELLOW}Enter new person pin{Style.RESET_ALL}"))
-        while new_person_pin <= 1000 or new_person_pin >= 10000:
+        while len(str(new_person_pin)) != 4:
             print(f'{Fore.RED}Your pin must be 4 digit number{Style.RESET_ALL}')
             new_person_pin = int(input('Enter valid pin : '))
         new_person_amount = int(input("Enter new person amount"))
@@ -205,59 +216,68 @@ class ATM:
         print(f"{Fore.GREEN}New Person data is {parse_json[len(parse_json)-1]}{Style.RESET_ALL}")
         return self.take_decision()
 
-    def delete_p_account(self):
-        self.delete_account = int(input(f'{Fore.YELLOW}Enter valid account number: {Style.RESET_ALL}'))
+    def delete_p_account(self, d_account):
+        delete_account = d_account
         while self.delete_account == self.person_data['account_no']:
             self.delete_account = int(input(f'{Fore.YELLOW}Enter account other than yourself:{Style.RESET_ALL}'))
-        for idx, x in enumerate(self.data):
-            if self.delete_account == x['account_no']:
-                with open('Account.json', 'r') as file:
-                    parse_json = json.load(file)
-                    deleted_account = parse_json.pop(idx)
+        with open('Account.json', 'r') as file:
+            parse_json = json.load(file)
+        for idx, x in enumerate(parse_json):
+            if delete_account == x['account_no']:
+                deleted_account = parse_json.pop(idx)
                 with open("Account.json", "w") as jsonFile:
                     json.dump(parse_json, jsonFile)
                 print(f"{Fore.GREEN}Person having account number {deleted_account['account_no']} has been deleted{Style.RESET_ALL}")
                 return self.take_decision()
-        return self.delete_p_account()
+        x = int(input(f'{Fore.RED}You entered invalid account number{Style.RESET_ALL}\nPlease enter valid account number:'))
+        return self.delete_p_account(x)
 
-    def activate_deactivate(self):
-        activate_deactivate_options = ['activate', 'de_activate']
-        for idx, x in enumerate(activate_deactivate_options):
-            print(f"{Fore.LIGHTCYAN_EX}Enter {idx} for {x}:{Style.RESET_ALL} ")
-        selected_option = int(input("Enter option: "))
-        ac_no = int(input(f"{Fore.YELLOW}Please enter valid account number{Style.RESET_ALL}"))
-        while ac_no == self.person_data['account_no']:
-            ac_no = int(input(f'{Fore.YELLOW}Please enter account number other than yourself{Style.RESET_ALL}'))
-        if selected_option == 0:
-            for idx, x in enumerate(self.data):
-                if ac_no == x['account_no']:
-                    if x['is_active']:
-                        print(f'{Fore.RED}Account number {ac_no} is already activated{Style.RESET_ALL}')
-                        return self.take_decision()
-                    else:
-                        with open('Account.json', 'r') as file:
-                            parse_json = json.load(file)
-                            parse_json[idx]['is_active'] = True
-                        with open("Account.json", "w") as jsonFile:
-                            json.dump(parse_json, jsonFile)
-                        print(f"{Fore.GREEN}Account number {parse_json[idx]['account_no']} has been activated{Style.RESET_ALL}")
-                        return self.take_decision()
-            return self.activate_deactivate()
-        elif selected_option == 1:
-            for idx, x in enumerate(self.data):
-                if ac_no == x['account_no']:
-                    if x['is_active']:
-                        with open('Account.json', 'r') as file:
-                            parse_json = json.load(file)
-                            parse_json[idx]['is_active'] = False
-                        with open("Account.json", "w") as jsonFile:
-                            json.dump(parse_json, jsonFile)
-                        print(f"{Fore.GREEN}Account number {parse_json[idx]['account_no']} has been deactivated{Style.RESET_ALL}")
-                        return self.take_decision()
-                    else:
-                        print(f'{Fore.GREEN}Account number {ac_no} is already deactivated{Style.RESET_ALL}')
-                        return self.take_decision()
-            return self.activate_deactivate()
+    def activate_deactivate(self, ac_no_act_deact):
+        ac_no = ac_no_act_deact
+        with open('Account.json', 'r') as file:
+            parse_json = json.load(file)
+        for idx, x in enumerate(parse_json):
+            if ac_no == x['account_no']:
+                activate_deactivate_options = ['activate', 'de_activate']
+                for idx, x in enumerate(activate_deactivate_options):
+                    print(f"{Fore.LIGHTCYAN_EX}Enter {idx} for {x}:{Style.RESET_ALL} ")
+                selected_option = int(input("Enter option: "))
+                if selected_option == 0:
+                    while ac_no == self.person_data['account_no']:
+                        ac_no = int(input(f'{Fore.YELLOW}Please enter account number other than yourself{Style.RESET_ALL}'))
+                    for idx, x in enumerate(parse_json):
+                        if ac_no == x['account_no']:
+                            if x['is_active']:
+                                print(f'{Fore.RED}Account number {ac_no} is already activated{Style.RESET_ALL}')
+                                return self.take_decision()
+                            else:
+                                parse_json[idx]['is_active'] = True
+                                with open("Account.json", "w") as jsonFile:
+                                    json.dump(parse_json, jsonFile)
+                                print(f"{Fore.GREEN}Account number {parse_json[idx]['account_no']} has been activated{Style.RESET_ALL}")
+                                return self.take_decision()
+                    return self.activate_deactivate()
+                elif selected_option == 1:
+                    while ac_no == self.person_data['account_no']:
+                        ac_no = int(input(f'{Fore.YELLOW}Please enter account number other than yourself{Style.RESET_ALL}'))
+                    for idx, x in enumerate(parse_json):
+                        if ac_no == x['account_no']:
+                            if x['is_active']:
+                                parse_json[idx]['is_active'] = False
+                                with open("Account.json", "w") as jsonFile:
+                                    json.dump(parse_json, jsonFile)
+                                print(f"{Fore.GREEN}Account number {parse_json[idx]['account_no']} has been deactivated{Style.RESET_ALL}")
+                                return self.take_decision()
+                            else:
+                                print(f'{Fore.GREEN}Account number {ac_no} is already deactivated{Style.RESET_ALL}')
+                                return self.take_decision()
+                    return self.activate_deactivate()
+                else:
+                    print('You enter invalid option! Please enter option again')
+                    return self.activate_deactivate()
+        print('You entered invalid account number')
+        x = int(input('Enter valid account number'))
+        return self.activate_deactivate(x)
 
 
 atm1 = ATM()
